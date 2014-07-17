@@ -1,0 +1,50 @@
+#!/usr/bin/perl
+
+# Copyright 2014 Josh Cepek <josh.cepek@usa.net>
+# This code part of the Op-Kit project, available under a GPLv3 license.
+# http://opensource.org/licenses/GPL-3.0
+
+use strict;
+use warnings;
+use Getopt::Long;
+Getopt::Long::Configure qw(bundling);
+
+sub usage {
+	printf <<EOM;
+Provide input on STDIN, and defined comments will be removed to STDOUT.
+
+Options:
+
+  -c, --comment
+      Strip lines beginning with this sequence (leading space allowed)
+  -C, --comment-strict
+      As above, but no leading spaces allowed
+  -b, --blank
+      Remove blank lines or those containing only whitespace
+  -B, --blank-strict
+      As above, but only truely blank lines (leave whitespace lines)
+EOM
+	exit 1;
+}
+
+my (@comment, @strict_comment);
+my $blank = 0;
+my $strict_blank = 0;
+
+GetOptions(
+	'comment|c=s'		=> \@comment,
+	'comment-strict|C=s'	=> \@strict_comment,
+	'blank|b'		=> \$blank,
+	'blank-strict|B'	=> \$strict_blank,
+	'help|usage|h'		=> \&usage,
+);
+
+while (<STDIN>) {
+	chomp;
+	my $line = $_;
+	next if ($strict_blank) && /^$/;
+	next if ($blank) && /^\s*$/;
+	map { next if ($line =~ /^$_/) } @strict_comment;
+	map { next if ($line =~ /^\s*$_/) } @comment;
+	printf "$_\n";
+}
